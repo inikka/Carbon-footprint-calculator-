@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Footprint Calculator</title>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --secondary: #4caf50;
+            --accent: #8bc34a;
+            --light: #e8f5e9;
+            --dark: #1b5e20;
+            --text: #333;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-align: center;
+            padding: 2rem 1rem;
+            box-shadow: var(--shadow);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        .intro {
+            text-align: center;
+            margin-bottom: 2rem;
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .calculator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .calculator {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .input-section {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .visualization {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--dark);
+        }
+        
+        .results {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .sorting-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .sort-btn {
+            background-color: var(--light);
+            color: var(--text);
+            border: 1px solid #ddd;
+        }
+        
+        .sort-btn.active {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .activities-list {
+            list-style-type: none;
+        }
+        
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tree-canvas {
+            width: 100%;
+            height: 300px;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        
+        .tree {
+            position: absolute;
+            bottom: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .tree-trunk {
+            width: 10px;
+            height: 60px;
+            background-color: #8B4513;
+            margin: 0 auto;
+        }
+        
+        .tree-crown {
+            width: 60px;
+            height: 80px;
+            background-color: var(--secondary);
+            border-radius: 50% 50% 0 0;
+            margin: 0 auto 10px;
+            position: relative;
+        }
+        
+        .tree-crown::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background-color: var(--accent);
+            border-radius: 50% 50% 0 0;
+            top: 10px;
+            left: 10px;
+        }
+        
+        .tree-label {
+            text-align: center;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .footprint-summary {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .tree-counter {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: var(--dark);
+            color: white;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Carbon Footprint Calculator</h1>
+        <p>Measure your environmental impact and visualize it with trees</p>
+    </header>
+    
+    <div class="container">
+        <section class="intro">
+            <h2>Calculate Your Carbon Footprint</h2>
+            <p>Enter your daily activities to calculate your carbon footprint. The results will be visualized using trees - each tree represents a portion of your carbon emissions that needs to be offset.</p>
+        </section>
+        
+        <section class="calculator">
+            <div class="input-section">
+                <h3>Your Activities</h3>
+                <form id="carbon-form">
+                    <div class="form-group">
+                        <label for="transport">Transportation (miles driven)</label>
+                        <input type="number" id="transport" min="0" step="0.1" value="10">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="electricity">Electricity Usage (kWh)</label>
+                        <input type="number" id="electricity" min="0" step="0.1" value="30">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="diet">Diet Type</label>
+                        <select id="diet">
+                            <option value="vegan">Vegan</option>
+                            <option value="vegetarian">Vegetarian</option>
+                            <option value="meatEater" selected>Meat Eater</option>
+                            <option value="heavyMeat">Heavy Meat Eater</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shopping">Shopping ($ spent monthly)</label>
+                        <input type="number" id="shopping" min="0" step="1" value="200">
+                    </div>
+                    
+                    <button type="button" id="calculate-btn">Calculate Footprint</button>
+                    <button type="button" id="add-activity-btn">Add Custom Activity</button>
+                </form>
+            </div>
+            
+            <div class="visualization">
+                <h3>Your Carbon Footprint Visualization</h3>
+                <div class="tree-canvas" id="tree-canvas">
+                    <!-- Trees will be generated here by JavaScript -->
+                </div>
+                <div class="tree-counter" id="tree-counter">0 Trees Needed</div>
+                <div class="footprint-summary" id="footprint-summary">Total CO₂: 0 kg</div>
+            </div>
+        </section>
+        
+        <section class="results">
+            <h3>Your Carbon Footprint Breakdown</h3>
+            <div class="sorting-options">
+                <button class="sort-btn active" data-sort="name">Sort by Name</button>
+                <button class="sort-btn" data-sort="co2">Sort by CO₂ (Low to High)</button>
+                <button class="sort-btn" data-sort="co2-desc">Sort by CO₂ (High to Low)</button>
+            </div>
+            <ul class="activities-list" id="activities-list">
+                <!-- Activity items will be added here by JavaScript -->
+            </ul>
+        </section>
+    </div>
+    
+    <footer>
+        <p>Carbon Footprint Calculator &copy; 2023 | Each tree represents approximately 21 kg of CO₂ absorbed per year</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carbon emission factors (kg CO₂ per unit)
+            const emissionFactors = {
+                transport: 0.404, // kg CO₂ per mile (average car)
+                electricity: 0.5, // kg CO₂ per kWh (US average)
+                diet: {
+                    vegan: 1.5, // kg CO₂ per day
+                    vegetarian: 2.0,
+                    meatEater: 3.0,
+                    heavyMeat: 4.5
+                },
+                shopping: 0.005 // kg CO₂ per dollar spent
+            };
+            
+            // Tree absorption capacity (kg CO₂ per year)
+            const treeAbsorption = 21; // kg CO₂ per tree per year
+            
+            // DOM elements
+            const calculateBtn = document.getElementById('calculate-btn');
+            const addActivityBtn = document.getElementById('add-activity-btn');
+            const treeCanvas = document.getElementById('tree-canvas');
+            const treeCounter = document.getElementById('tree-counter');
+            const footprintSummary = document.getElementById('footprint-summary');
+            const activitiesList = document.getElementById('activities-list');
+            const sortButtons = document.querySelectorAll('.sort-btn');
+            
+            // Activities array
+            let activities = [];
+            
+            // Initialize with default activities
+            initializeActivities();
+            
+            // Event listeners
+            calculateBtn.addEventListener('click', calculateFootprint);
+            addActivityBtn.addEventListener('click', addCustomActivity);
+            
+            sortButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    sortButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    // Sort activities
+                    sortActivities(this.dataset.sort);
+                });
+            });
+            
+            // Initialize the calculator
+            calculateFootprint();
+            
+            function initializeActivities() {
+                activities = [
+                    { name: 'Transportation', co2: 0, custom: false },
+                    { name: 'Electricity', co2: 0, custom: false },
+                    { name: 'Diet', co2: 0, custom: false },
+                    { name: 'Shopping', co2: 0, custom: false }
+                ];
+            }
+            
+            function calculateFootprint() {
+                // Get input values
+                const transportMiles = parseFloat(document.getElementById('transport').value) || 0;
+                const electricityKwh = parseFloat(document.getElementById('electricity').value) || 0;
+                const dietType = document.getElementById('diet').value;
+                const shoppingDollars = parseFloat(document.getElementById('shopping').value) || 0;
+                
+                // Calculate CO₂ emissions
+                const transportCO2 = transportMiles * emissionFactors.transport;
+                const electricityCO2 = electricityKwh * emissionFactors.electricity;
+                const dietCO2 = emissionFactors.diet[dietType];
+                const shoppingCO2 = shoppingDollars * emissionFactors.shopping;
+                
+                // Update activities array
+                activities[0].co2 = transportCO2;
+                activities[1].co2 = electricityCO2;
+                activities[2].co2 = dietCO2;
+                activities[3].co2 = shoppingCO2;
+                
+                // Calculate total CO₂
+                const totalCO2 = activities.reduce((sum, activity) => sum + activity.co2, 0);
+                
+                // Calculate trees needed
+                const treesNeeded = Math.ceil(totalCO2 / treeAbsorption);
+                
+                // Update UI
+                updateVisualization(treesNeeded, totalCO2);
+                updateActivitiesList();
+            }
+            
+            function addCustomActivity() {
+                const activityName = prompt('Enter activity name:');
+                if (!activityName) return;
+                
+                const activityCO2 = parseFloat(prompt('Enter CO₂ emissions (kg):')) || 0;
+                
+                activities.push({
+                    name: activityName,
+                    co2: activityCO2,
+                    custom: true
+                });
+                
+                calculateFootprint();
+            }
+            
+            function updateVisualization(treesNeeded, totalCO2) {
+                // Clear existing trees
+                treeCanvas.innerHTML = '';
+                
+                // Update tree counter and summary
+                treeCounter.textContent = `${treesNeeded} Tree${treesNeeded !== 1 ? 's' : ''} Needed`;
+                footprintSummary.textContent = `Total CO₂: ${totalCO2.toFixed(2)} kg`;
+                
+                // Create trees
+                const maxTrees = 10; // Maximum trees to display
+                const displayTrees = Math.min(treesNeeded, maxTrees);
+                
+                for (let i = 0; i < displayTrees; i++) {
+                    const tree = document.createElement('div');
+                    tree.className = 'tree';
+                    
+                    // Position trees evenly
+                    const position = (i / (displayTrees - 1 || 1)) * 90 + 5; // 5% to 95% of container
+                    tree.style.left = `${position}%`;
+                    
+                    // Create tree elements
+                    const trunk = document.createElement('div');
+                    trunk.className = 'tree-trunk';
+                    
+                    const crown = document.createElement('div');
+                    crown.className = 'tree-crown';
+                    
+                    const label = document.createElement('div');
+                    label.className = 'tree-label';
+                    label.textContent = `${Math.ceil(totalCO2 / treesNeeded)} kg`;
+                    
+                    tree.appendChild(crown);
+                    tree.appendChild(trunk);
+                    tree.appendChild(label);
+                    
+                    treeCanvas.appendChild(tree);
+                }
+                
+                // If we have more trees than we can display, show a message
+                if (treesNeeded > maxTrees) {
+                    const message = document.createElement('div');
+                    message.style.textAlign = 'center';
+                    message.style.marginTop = '10px';
+                    message.textContent = `+ ${treesNeeded - maxTrees} more trees needed`;
+                    treeCanvas.appendChild(message);
+                }
+            }
+            
+            function updateActivitiesList() {
+                // Clear existing list
+                activitiesList.innerHTML = '';
+                
+                // Add activity items
+                activities.forEach(activity => {
+                    const item = document.createElement('li');
+                    item.className = 'activity-item';
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = activity.name;
+                    
+                    const co2Span = document.createElement('span');
+                    co2Span.textContent = `${activity.co2.toFixed(2)} kg CO₂`;
+                    
+                    if (activity.custom) {
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.style.marginLeft = '10px';
+                        deleteBtn.style.padding = '5px 10px';
+                        deleteBtn.style.fontSize = '0.8rem';
+                        deleteBtn.addEventListener('click', function() {
+                            activities = activities.filter(a => a !== activity);
+                            calculateFootprint();
+                        });
+                        
+                        co2Span.appendChild(deleteBtn);
+                    }
+                    
+                    item.appendChild(nameSpan);
+                    item.appendChild(co2Span);
+                    
+                    activitiesList.appendChild(item);
+                });
+            }
+            
+            function sortActivities(sortType) {
+                switch(sortType) {
+                    case 'name':
+                        activities.sort((a, b) => a.name.localeCompare(b.name));
+                        break;
+                    case 'co2':
+                        activities.sort((a, b) => a.co2 - b.co2);
+                        break;
+                    case 'co2-desc':
+                        activities.sort((a, b) => b.co2 - a.co2);
+                        break;
+                }
+                
+                updateActivitiesList();
+            }
+        });
+    </script>
+</body>
+</html>
